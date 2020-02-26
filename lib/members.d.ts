@@ -7,7 +7,7 @@ export default class Members {
     count: number;
     myID: any;
     me: any;
-    constructor();
+    constructor(members?: any);
     /** Returns member's info for given id.
      *
      * Resulting object containts two fields - id and info.
@@ -26,5 +26,5 @@ export default class Members {
     /** Adds a member from the collection. For internal use only. */
     removeMember(memberData: any): any;
     /** Resets the collection to the initial state. For internal use only. */
-    reset(): void;
+    reset(members?: any): void;
 }
