@@ -12,6 +12,7 @@ declare class PusherMockInstance {
      * @returns {PusherChannelMock} PusherChannelMock object that represents channel
      */
     channel(name: string, client?: PusherMock): any;
+    reset(): void;
 }
 declare const _default: PusherMockInstance;
 export default _default;
