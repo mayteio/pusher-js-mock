@@ -1,5 +1,5 @@
 import { PusherMock, PusherPresenceChannelMock } from "../";
-import { AuthInfo } from "pusher-js";
+import { createSyncPresenceClient } from "../utils";
 
 describe("PusherPresenceChannelMock", () => {
   let channelMock: PusherPresenceChannelMock;
@@ -26,21 +26,6 @@ describe("PusherPresenceChannelMock", () => {
   });
 });
 
-/**
- * Creates a mocked client for testing
- * @param id The ID to attach to the client
- * @param info The user info object
- */
-const createClient = (id: string, info: any = {}) =>
-  new PusherMock("key", {
-    authorizer: () => ({
-      authorize: (socketId, callback) => {
-        // await Promise.resolve();
-        callback(false, ({ id, info } as unknown) as AuthInfo);
-      },
-    }),
-  });
-
 describe("Proxied PusherPresenceChannelMock", () => {
   let client: PusherMock;
   let otherClient: PusherMock;
@@ -50,8 +35,8 @@ describe("Proxied PusherPresenceChannelMock", () => {
   const PRESENCE_CHANNEL = "presence-channel";
 
   beforeEach(() => {
-    client = createClient("my-id", {});
-    otherClient = createClient("your-id", {});
+    client = createSyncPresenceClient("my-id", {});
+    otherClient = createSyncPresenceClient("your-id", {});
 
     proxiedChannelMock = client.subscribe(PRESENCE_CHANNEL);
     otherProxiedChannelMock = otherClient.subscribe(PRESENCE_CHANNEL);
@@ -151,7 +136,7 @@ describe("Proxied PusherPresenceChannelMock", () => {
   describe("#subscribe", () => {
     it("should trigger internal events such as pusher:subscription_succeeded", async () => {
       const listener = jest.fn() as any;
-      const client = createClient("my-id", {});
+      const client = createSyncPresenceClient("my-id", {});
       const channel = client.subscribe("presence-channel");
       channel.bind("pusher:subscription_succeeded", listener);
       await new Promise(setImmediate);
@@ -160,8 +145,8 @@ describe("Proxied PusherPresenceChannelMock", () => {
     });
     it("should trigger external events such as pusher:member_added", async () => {
       const listener = jest.fn() as any;
-      const client = createClient("my-id", {});
-      const otherClient = createClient("your-id", {});
+      const client = createSyncPresenceClient("my-id", {});
+      const otherClient = createSyncPresenceClient("your-id", {});
       const channel = client.subscribe("presence-channel");
       await channel.bind("pusher:member_added", listener);
       await otherClient.subscribe("presence-channel");
@@ -173,8 +158,8 @@ describe("Proxied PusherPresenceChannelMock", () => {
   describe("#unsubscribe", () => {
     it("should trigger external events such as pusher:member_removed", async () => {
       const listener = jest.fn() as any;
-      const client = createClient("my-id", {});
-      const otherClient = createClient("your-id", {});
+      const client = createSyncPresenceClient("my-id", {});
+      const otherClient = createSyncPresenceClient("your-id", {});
       const channel = client.subscribe("presence-channel");
       channel.bind("pusher:member_removed", listener);
       otherClient.subscribe("presence-channel");
