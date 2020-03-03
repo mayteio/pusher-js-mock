@@ -110,7 +110,12 @@ This way you'll just replace your PusherFactory with PusherFactoryMock.
 
 #### Using presence channels
 
-This package also supports using presence channels for multiple clients. The mock
+This package also supports using presence channels for multiple clients. The mock will automatically detect when `presence-` is in the channel name and return a presence channel with `channel.members` filled out as expected. You can pass in IDs and info via a custom authorizer, just as you would with the real package. Importantly;
+
+1. Return and object `{id, info}` where the auth key would normally go in the callback, i.e. `callback(false, {id, info})`.
+2. If your authorizer is async, you'll have to wrap your assertions in `process.nextTick` to allow the promise to resolve and set the ID & info. If you're not using an async authorizer (unlikey), you can put `await new Promise(setImmediate)` above your assertions to flush internal promises and apply your id & info to the client.
+
+Both notes are demonstrated in the example below.
 
 ```js
 // create-client.js
@@ -122,8 +127,8 @@ export const createClient = ({ id, info }) =>
     cluster: "APP_CLUSTER",
     // see https://github.com/pusher/pusher-js#authorizer-function
     authorizer: ({ name }) => ({
-      authorize: (socketId, callback) => {
-        const auth = getAuthSomehow(id, info);
+      authorize: async (socketId, callback) => {
+        const auth = await getAuthSomehow(id, info);
         callback(false, auth);
       },
     }),
@@ -139,7 +144,8 @@ import createClient from "../create-client";
 // mock the authorize function and pusher
 jest.mock("pusher-js", () => require("pusher-js-mock"));
 jest.mock("../getAuthSomehow", () => ({
-  getAuthSomehow: (id, info) => ({ id, info }),
+  // async auth result resolves to { id, info } object, which gets set in the client
+  getAuthSomehow: (id, info) => Promise.resolve({ id, info }),
 }));
 
 it("should create a presence channel", async () => {
@@ -149,14 +155,17 @@ it("should create a presence channel", async () => {
   // act: required to ensure pusher events are called, i.e. pusher:member_added
   const presenceChannel = await pusher.subscribe("presence-channel");
 
-  // assert: presenceChannel has the properties we expect it to.
-  expect(presenceChannel.members.myID).toBe("my-id");
-  expect(presenceChannel.members.me).toEqual({
-    id: "my-id",
-    info: { role: "moderator" },
-  });
-  expect(presenceChannel.members.members).toEqual({
-    "my-id": { role: "moderator" },
+  // process.nextTick wraps our assertions to ensure the promise has resolved.
+  process.nextTick(() => {
+    // assert: presenceChannel has the properties we expect it to.
+    expect(presenceChannel.members.myID).toBe("my-id");
+    expect(presenceChannel.members.me).toEqual({
+      id: "my-id",
+      info: { role: "moderator" },
+    });
+    expect(presenceChannel.members.members).toEqual({
+      "my-id": { role: "moderator" },
+    });
   });
 });
 ```

@@ -1,6 +1,7 @@
 import { Config } from "pusher-js";
 import PusherMockInstance from "./pusher-js-mock-instance";
-import { emitDisconnectionEvents } from "./pusherEvents";
+import PusherPresenceChannelMock from "./pusher-presence-channel-mock";
+import { emitConnectionEvents, emitDisconnectionEvents } from "./pusherEvents";
 
 /** Class representing fake Pusher Client. */
 class PusherMock {
@@ -28,26 +29,35 @@ class PusherMock {
     }
   }
 
+  public async authorize(channel: PusherPresenceChannelMock) {
+    if (this.config?.authorizer) {
+      await this.config
+        .authorizer({} as any, {})
+        .authorize(channel as any, this.setAuthInfo);
+    } else {
+      this.setAuthInfo(false, {
+        id: Math.random()
+          .toString(36)
+          .substr(2, 9),
+        info: {},
+      } as any);
+    }
+
+    emitConnectionEvents(channel, this);
+  }
+
   /**
    * Mock subscribing to a channel.
    * @param {String} name - name of the channel.
    * @returns {PusherChannelMock} PusherChannelMock object that represents channel
    */
   public subscribe(name: string) {
+    const channel = PusherMockInstance.channel(name, this);
     if (name.includes("presence-")) {
-      this.config?.authorizer
-        ? this.config
-            .authorizer({} as any, {})
-            .authorize({ name } as any, this.setAuthInfo)
-        : this.setAuthInfo(false, {
-            id: Math.random()
-              .toString(36)
-              .substr(2, 9),
-            info: {},
-          } as any);
+      this.authorize(channel);
     }
 
-    return PusherMockInstance.channel(name, this);
+    return channel;
   }
 
   /**
@@ -68,3 +78,29 @@ class PusherMock {
 }
 
 export default PusherMock;
+
+// (function() {
+//   const timeouts: any = [],
+//     messageName = "nextTickPlz",
+//     _nextTick = function(fn: () => void) {
+//       timeouts.push(fn);
+//       window.postMessage(messageName, "*");
+//     },
+//     _handleMessage = (event: any) => {
+//       if (
+//         event != null &&
+//         event.source === window &&
+//         event.data === messageName
+//       ) {
+//         event.stopPropagation();
+//         if (timeouts.length > 0) {
+//           var fn = timeouts.shift();
+//           fn && fn();
+//         }
+//       }
+//     };
+
+//   window.addEventListener("message", _handleMessage, true);
+
+//   (window as any).nextTick = _nextTick;
+// })();

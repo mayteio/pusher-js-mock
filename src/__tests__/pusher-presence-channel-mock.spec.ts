@@ -1,6 +1,5 @@
 import { PusherMock, PusherPresenceChannelMock } from "../";
 import { AuthInfo } from "pusher-js";
-import pusherJsMockInstance from "../pusher-js-mock-instance";
 
 describe("PusherPresenceChannelMock", () => {
   let channelMock: PusherPresenceChannelMock;
@@ -36,6 +35,7 @@ const createClient = (id: string, info: any = {}) =>
   new PusherMock("key", {
     authorizer: () => ({
       authorize: (socketId, callback) => {
+        // await Promise.resolve();
         callback(false, ({ id, info } as unknown) as AuthInfo);
       },
     }),
@@ -106,14 +106,6 @@ describe("Proxied PusherPresenceChannelMock", () => {
     otherProxiedChannelMock.unbind("custom-event", otherListener);
   });
 
-  it.skip(" should trigger internal events such as pusher:subscription_succeeded", async () => {
-    const listener = jest.fn() as any;
-    const client = createClient("my-id", {});
-    const channel = client.subscribe("presence-channel");
-    await channel.bind("pusher:subscription_succeeded", listener);
-    expect(listener).toHaveBeenCalled();
-  });
-
   describe("#trigger", () => {
     it(" is an alias for emit", () => {
       let callback = jest.fn();
@@ -161,7 +153,8 @@ describe("Proxied PusherPresenceChannelMock", () => {
       const listener = jest.fn() as any;
       const client = createClient("my-id", {});
       const channel = client.subscribe("presence-channel");
-      await channel.bind("pusher:subscription_succeeded", listener);
+      channel.bind("pusher:subscription_succeeded", listener);
+      await new Promise(setImmediate);
       expect(listener).toHaveBeenCalledTimes(1);
       await channel.unbind("pusher:subscription_succeeded", listener);
     });
@@ -172,6 +165,7 @@ describe("Proxied PusherPresenceChannelMock", () => {
       const channel = client.subscribe("presence-channel");
       await channel.bind("pusher:member_added", listener);
       await otherClient.subscribe("presence-channel");
+      await new Promise(setImmediate);
       await expect(listener).toHaveBeenCalledTimes(1);
       await channel.unbind("pusher:member_added", listener);
     });

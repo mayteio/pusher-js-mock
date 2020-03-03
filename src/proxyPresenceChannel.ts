@@ -19,7 +19,7 @@ export const proxyPresenceChannel = (
   client: PusherMock
 ) => {
   const proxiedChannel = proxyChannel(channel, client);
-  emitConnectionEvents(proxiedChannel, client);
+  // emitConnectionEvents(proxiedChannel, client);
   return proxiedChannel;
 };
 

@@ -6,8 +6,8 @@ export const createClient = ({ id, info }) =>
     cluster: "APP_CLUSTER",
     // see https://github.com/pusher/pusher-js#authorizer-function
     authorizer: ({ name }) => ({
-      authorize: (socketId, callback) => {
-        const auth = getAuthSomehow(id, info);
+      authorize: async (socketId, callback) => {
+        const auth = await getAuthSomehow(id, info);
         callback(false, auth);
       },
     }),
