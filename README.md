@@ -110,12 +110,58 @@ This way you'll just replace your PusherFactory with PusherFactoryMock.
 
 #### Using presence channels
 
-This package also supports using presence channels for multiple clients. The mock will automatically detect when `presence-` is in the channel name and return a presence channel with `channel.members` filled out as expected. You can pass in IDs and info via a custom authorizer, just as you would with the real package. Importantly;
+This package also supports using presence channels for multiple clients. The mock will automatically detect when `presence-` is in the channel name and return a presence channel with `channel.members` filled out as expected. You can pass in IDs and info via a custom authorizer, just as you would with the real package.
 
-1. Return and object `{id, info}` where the auth key would normally go in the callback, i.e. `callback(false, {id, info})`.
-2. If your authorizer is async, you'll have to wrap your assertions in `process.nextTick` to allow the promise to resolve and set the ID & info. If you're not using an async authorizer (unlikey), you can put `await new Promise(setImmediate)` above your assertions to flush internal promises and apply your id & info to the client.
+Unfortunately due to the nature of async testing in jest, there are a few rules:
 
-Both notes are demonstrated in the example below.
+1. Return an object `{id, info}` where the auth key would normally go in the callback, i.e.
+
+```js
+authorize: (socketId, callback) => callback(false, { id, info });
+```
+
+2. If your authorizer is async, you'll have to wrap your assertions in `process.nextTick` to allow the promise to resolve and set the ID & info.
+
+```js
+// given this Pusher config with async auth
+{
+  authorizer: () => ({
+    authorize: async (socketId, callback) =>
+    Promise.resolve().then(() => callback(false, { id, info }))
+  })
+}
+
+// do this in your tests
+const channel = client.subscribe("presence-channel")
+process.nextTick(() => {
+  expect(channel.members.myID).toBe("my-id")
+})
+...
+```
+
+3. If you're using an syncronous authorizer, you can put `await new Promise(setImmediate)` above your assertions to flush internal promises and apply your id & info to the client:
+
+```js
+// given this Pusher config with sync auth
+{
+  authorizer: () => ({
+    authorize: (socketId, callback) => callback(false, { id, info }),
+  });
+}
+
+// do this in your tests
+const channel = client.subscribe("presence-channel");
+await new Promise(setImmediate);
+expect(channel.members.myID).toBe("my-id");
+```
+
+If you're using React, you'll have to wrap it further in act:
+
+```js
+await act(async () => await new Promise(setImmediate));
+```
+
+Here's an example:
 
 ```js
 // create-client.js
