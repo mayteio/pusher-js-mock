@@ -1,8 +1,7 @@
-import { proxyPresenceChannel } from './proxyPresenceChannel';
-import PusherChannelMock from './pusher-channel-mock';
-import PusherMock from './pusher-js-mock';
-import PusherPresenceChannelMock from './pusher-presence-channel-mock';
-// tslint-ignore
+import { proxyPresenceChannel } from "./proxyPresenceChannel";
+import PusherChannelMock from "./pusher-channel-mock";
+import PusherMock from "./pusher-js-mock";
+import PusherPresenceChannelMock from "./pusher-presence-channel-mock";
 
 /** Interface for storing channels */
 export interface IChannels {
@@ -14,6 +13,7 @@ class PusherMockInstance {
 
   constructor() {
     this.channels = {};
+    this.channel = this.channel.bind(this);
   }
   /**
    * Get channel by its name.
@@ -21,7 +21,7 @@ class PusherMockInstance {
    * @returns {PusherChannelMock} PusherChannelMock object that represents channel
    */
   public channel(name: string, client: PusherMock = new PusherMock()) {
-    const presenceChannel = name.includes('presence-');
+    const presenceChannel = name.includes("presence-");
     if (!this.channels[name]) {
       this.channels[name] = presenceChannel
         ? new PusherPresenceChannelMock(name)

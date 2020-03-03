@@ -1,17 +1,9 @@
-import { Member } from 'pusher-js';
-import Members from './members';
-import PusherChannelMock from './pusher-channel-mock';
-
-export interface IMember {
-  id: string;
-  info: Record<string, any>;
-}
+import Members from "./members";
+import PusherChannelMock from "./pusher-channel-mock";
 
 /** Basic augmentation of the PusherChannel class. */
 class PusherPresenceChannelMock extends PusherChannelMock {
   public members: Members;
-  public me: Member<Record<string, any>> | undefined;
-  public myID: string | undefined;
 
   /** Alias to match actual API for client events */
   public trigger = this.emit;
@@ -20,8 +12,10 @@ class PusherPresenceChannelMock extends PusherChannelMock {
   /**
    * Initialise members object when created.
    * `pusher-js` provides all the functionality we need.
+   * @param name The name of the channel to initialise
+   * @returns PusherPresenceChannelMock the mocked presence channel
    */
-  constructor(name: string = 'presence-channel') {
+  constructor(name: string = "presence-channel") {
     super(name);
     this.members = new Members();
   }
