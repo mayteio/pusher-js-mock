@@ -3,6 +3,7 @@ import PusherFactoryMock from "./pusher-factory-mock";
 import PusherMock from "./pusher-js-mock";
 import PusherMockInstance from "./pusher-js-mock-instance";
 import PusherPresenceChannelMock from "./pusher-presence-channel-mock";
+import { createAsyncPresenceClient, createSyncPresenceClient } from "./utils";
 
 export {
   PusherMockInstance,
@@ -10,4 +11,6 @@ export {
   PusherFactoryMock,
   PusherChannelMock,
   PusherPresenceChannelMock,
+  createSyncPresenceClient,
+  createAsyncPresenceClient,
 };
