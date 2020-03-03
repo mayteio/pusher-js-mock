@@ -14,6 +14,7 @@ class PusherMockInstance {
   constructor() {
     this.channels = {};
     this.channel = this.channel.bind(this);
+    this.reset = this.reset.bind(this);
   }
   /**
    * Get channel by its name.
@@ -31,6 +32,10 @@ class PusherMockInstance {
     return presenceChannel
       ? proxyPresenceChannel(this.channels[name], client)
       : this.channels[name];
+  }
+
+  public reset() {
+    this.channels = {};
   }
 }
 
